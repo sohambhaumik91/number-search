@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style>
+	html, body {
+		height: 100%;
+	}
+	body {
+		margin:0px;
+	}
+		.container {
+			margin:0 auto;
+			text-align: center;
+			width: 60%;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items:center;
+		}
+		#notification {
+
+		}
+		.notification {
+			background-color: #eff1f5;
+			padding: 15px;
+			margin-top: 40px;
+			text-align: left;
+		}
+		input {
+			width: 80%;
+			padding: 15px;
+			font-size: 20px;
+			border-radius: 3px;
+			border: 1px solid #d3d3d3;
+		}
+		input:focus {
+			outline: none;
+		}
+		button {
+			padding: 10px;
+			background-color: #b6afa7;
+			text-transform: uppercase;
+			color: white;
+			font-weight: bold;
+			cursor: pointer;
+			margin-left: 5px;
+			 /*background: none;*/
+			 border: none;
+		}
+		button:focus {
+			outline: none;
+		}
+		input::placeholder {
+		  color: #B0BEC5;
+		}
+		.notification.success {
+			background-color: rgba(34,139,34, 0.4)
+		}
+		.notification.error {
+			background-color: rgba(230,0,0,0.4)
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div style="width: 80%;">
+			<h1>Check Your Numbers!!</h1>
+			<input id="input" type="text"/><button id="submit-btn" onclick="showDups()">Submit</button>
+
+			<div id="notification" class="notification"></div>
+		</div>
+		
+	</div>
+
+
+
+<script type="text/javascript">
+	
+	var currentInput = document.getElementById('input');
+	var notifString = '';
+	var notifSection = document.getElementById('notification');
+	var submitBtn = document.getElementById('submit-btn');
+	
+
+	var array = [1, 2, 5, 5, 8, 3, 6, 12];
+	var sortedArray =  array.slice().sort((a, b) => {return a - b})	
+
+	currentInput.addEventListener('keydown', (e)=> {
+		
+		if(document.getElementById("input").value.length === 0) {
+			notifSection.classList.remove('error');
+			notifSection.classList.remove('success');
+		}
+
+		notifString = '';
+		if (/\d+|,+|[/b]+|-+/i.test(e.key) ){
+			// console.log("Valid character");
+			notifSection.innerHTML = notifString;
+			notifSection.classList.remove('error');
+		} else {
+			notifString = 'Please Enter only numbers, commas, or hyphens';
+			notifSection.classList.add('error');
+			notifSection.innerHTML = notifString;
+			e.preventDefault();
+			return false;
+		}
+		console.log(notifString);
+		
+		return true;
+	})	
+
+	var FUNCTION_MAP = {
+		'notiString': '',
+		'duplicates': [],
+		'uniques': [],
+		'rangeFunction': function(val1, val2) {
+			console.log(val1, val2);
+			const max = parseInt(val1) > parseInt(val2) ? parseInt(val1) : parseInt(val2);
+			const min = parseInt(val1) > parseInt(val2) ? parseInt(val2) : parseInt(val1);
+			console.log(max, min);
+			let lowerBound = findLower(sortedArray, min);
+			console.log(lowerBound);
+			let upperBound = findUpper(sortedArray, max);
+
+			console.log("bounds are",  upperBound);
+
+			var lowerIndex, upperIndex;
+			
+			if(lowerBound.foundFlag) {
+				lowerIndex = sortedArray.indexOf(min);
+			} else {
+				lowerIndex = lowerBound.low;
+			}
+
+			console.log()
+
+			if(upperBound.foundFlag) {
+				upperIndex = sortedArray.indexOf(max);
+			} else {
+				upperIndex = upperBound.high;
+			}
+			console.log(lowerIndex, upperIndex)
+
+			for(var i = lowerIndex; i <=upperIndex; i++) {
+				this.duplicates.push(sortedArray[i]);
+			}
+			
+			// console.log(this.duplicates);
+			// for(var j =0 ;j<sortedArray.length; j++) {
+				
+			// 	if(this.duplicates.indexOf(sortedArray[j]) < 0) {
+			// 		this.uniques.push(sortedArray[j]);
+			// 	}
+
+			// }
+			
+
+		},
+		'valueFunction': function(value) {
+			let bound = findUpper(sortedArray,parseInt(value));
+
+			if(bound.foundFlag) {
+				this.duplicates.push(parseInt(value));
+			} else {
+				this.uniques.push(parseInt(value));
+			}
+
+
+		}
+	};
+
+	console.log("sorted array is", sortedArray);
+	function showDups() {
+		var inputValue = currentInput.value;
+		var values = inputValue.split(",");
+		var dupString = '';
+
+		FUNCTION_MAP.uniques.length = 0;
+		FUNCTION_MAP.duplicates.length = 0;
+		
+		values.map((val) => {
+			if(val.indexOf("-") > -1) {
+				// callRangeFunction
+				let values = val.split("-");
+				FUNCTION_MAP['rangeFunction'](values[0], values[1]);
+			} else {
+				FUNCTION_MAP['valueFunction'](val);
+			}
+		});
+
+
+		var uniques = [];
+		for(var j =0 ;j<sortedArray.length; j++) {
+			
+			if(FUNCTION_MAP.duplicates.indexOf(sortedArray[j]) < 0) {
+				uniques.push(sortedArray[j]);
+			}
+
+		}
+		
+
+		let dups = [...new Set(FUNCTION_MAP.duplicates)];
+		console.log(uniques, dups);
+		let finalInList = uniques;
+		console.log(dups.join(","));
+		// console.log(FUNCTION_MAP.duplicates);
+		// console.log( [...new Set(FUNCTION_MAP.duplicates)], [...new Set(FUNCTION_MAP.uniques)]);
+		document.getElementById('notification').innerHTML = 'Duplicates are: ' + dups.join(",") + ' and will be skipped.  ' + '\n' + '\n <br>uniques are: ' + finalInList.join(",");
+		document.getElementById('notification').classList.add('success');
+	}
+
+	// var inputValue = 
+
+
+	// sort array for binary search
+	
+	//find first element greater than lower rnange bound
+	function findLower(arr, rangeLower) {
+
+		
+		var size = arr.length;
+		var low = 0;
+		var high = size - 1;
+		var foundFlag = false;
+
+		while(low <= high) {
+			var mid = Math.floor((low + high)/2);
+			if(arr[mid] == rangeLower ) {
+				foundFlag = true;
+				return {
+					foundFlag: foundFlag,
+					number: rangeLower,
+					index: mid
+				};
+			} else if(arr[mid] >= rangeLower) {
+				high = mid - 1;
+			} else {
+				low = mid + 1;
+			}
+		}
+		return {
+			foundFlag: foundFlag,
+			low: low,
+			number: rangeLower
+		}
+	}
+	function findUpper(arr, rangeLower) {
+		
+		var size = arr.length;
+		var low = 0;
+		var high = size - 1;
+		var foundFlag = false;
+
+		while(low <= high) {
+			var mid = Math.floor((low + high)/2);
+			if(arr[mid] == rangeLower ) {
+				foundFlag = true;
+				return {
+					foundFlag: foundFlag,
+					number: rangeLower,
+					index: mid
+				};
+			} else if(arr[mid] >= rangeLower) {
+				high = mid - 1;
+			} else {
+				low = mid + 1;
+			}
+		}
+		// console.log("higher", foundFlag, high);
+		return {
+			foundFlag: foundFlag,
+			high: high,
+			number: rangeLower
+		}
+	}
+
+
+
+</script>
+</body>
+</html>
